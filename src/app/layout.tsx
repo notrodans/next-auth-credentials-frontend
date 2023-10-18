@@ -2,13 +2,13 @@ import { Providers } from "@/components/providers/providers";
 import "@/styles/globals.css";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "../../pages/api/auth/[...nextauth]";
 import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
-import { Header } from "./components/header";
+import { Header } from "./_components/header";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../../pages/api/auth/[...nextauth]";
 
-const inter = Inter({ weight: ["400", "500", "700"], subsets: ["latin", "cyrillic"] });
+const inter = Inter({ weight: ["300", "400", "500", "700"], subsets: ["latin", "cyrillic"] });
 
 export const metadata: Metadata = {
 	title: "General",

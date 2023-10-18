@@ -23,7 +23,7 @@ export const Header = () => {
 	const pathname = usePathname();
 
 	return (
-		<header className='t-0 l-0 bg-background-alpha fixed w-full border-b backdrop-blur-md'>
+		<header className='t-0 l-0 fixed w-full border-b bg-background-alpha backdrop-blur-md'>
 			<Container className='flex items-center justify-end py-3'>
 				<nav className='flex items-center space-x-6 text-sm font-medium'>
 					<Link
@@ -49,7 +49,7 @@ export const Header = () => {
 							<Link
 								href={"/signup"}
 								className={cn(
-									"hidden text-foreground/60 transition-colors hover:text-foreground/80 lg:block",
+									"text-foreground/60 transition-colors hover:text-foreground/80",
 									pathname?.startsWith("/signup") ? "text-foreground" : "text-foreground/60"
 								)}
 							>
@@ -59,11 +59,11 @@ export const Header = () => {
 					)}
 					{status === "authenticated" && (
 						<>
-							{session?.user.role === "ADMIN" && (
+							{session?.user?.role === "ADMIN" && (
 								<Link
 									href={"/admin"}
 									className={cn(
-										"hidden text-foreground/60 transition-colors hover:text-foreground/80 lg:block",
+										"text-foreground/60 transition-colors hover:text-foreground/80",
 										pathname?.startsWith("/admin") ? "text-foreground" : "text-foreground/60"
 									)}
 								>
@@ -73,7 +73,7 @@ export const Header = () => {
 							<Link
 								href={"/profile"}
 								className={cn(
-									"hidden text-foreground/60 transition-colors hover:text-foreground/80 lg:block",
+									"text-foreground/60 transition-colors hover:text-foreground/80",
 									pathname?.startsWith("/profile") ? "text-foreground" : "text-foreground/60"
 								)}
 							>

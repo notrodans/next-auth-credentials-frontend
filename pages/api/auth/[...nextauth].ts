@@ -1,9 +1,11 @@
-import NextAuth, { NextAuthOptions, UserDetails } from "next-auth";
+import NextAuth, { Error, NextAuthOptions, Tokens, UserDetails } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { JWT } from "next-auth/jwt";
 import { signOut } from "next-auth/react";
 
-async function refreshTokenApiCall(token: JWT): Promise<JWT> {
+type TokensAndError = Tokens & { error: Error };
+
+async function refreshTokenApiCall(token: JWT): Promise<TokensAndError> {
 	if (token?.refreshToken) {
 		const url = process.env.NEXT_PUBLIC_API_URL + "/auth/refresh";
 
@@ -18,23 +20,24 @@ async function refreshTokenApiCall(token: JWT): Promise<JWT> {
 			},
 			body: formData
 		});
+
+		const data = (await res.json()) as TokensAndError;
+
 		if (res.ok) {
-			const data = (await res.json()) as { accessToken: string; expiresIn: number };
-			const newToken: JWT = {
-				...token,
-				...data
-			};
-			return newToken;
+			return data;
 		}
+
+		return {
+			accessToken: null,
+			refreshToken: null,
+			expiresIn: 0,
+			error: null
+		};
 	}
 
 	return {
-		...token,
-		accessToken: undefined,
-		expiresIn: undefined,
-		refreshToken: undefined,
-		role: undefined
-	} satisfies JWT;
+		error: "RefreshAccessTokenError"
+	};
 }
 
 const fetchProfile = async (accessToken: string) => {
@@ -52,9 +55,9 @@ const fetchProfile = async (accessToken: string) => {
 
 	if (userRes.ok) {
 		return userDetails;
-	} else {
-		throw new Error(userDetails?.message);
 	}
+
+	return null;
 };
 
 export const authOptions = {
@@ -77,7 +80,7 @@ export const authOptions = {
 				const url = process.env.NEXT_PUBLIC_API_URL + "/auth/login";
 				const formData = new URLSearchParams();
 
-				if (credentials?.email && credentials.password) {
+				if (credentials?.email && credentials?.password) {
 					formData.append("email", credentials.email);
 					formData.append("password", credentials.password);
 				}
@@ -102,16 +105,22 @@ export const authOptions = {
 	],
 	callbacks: {
 		async session({ session, token }) {
-			const accessToken = token.accessToken;
+			const accessToken = token?.accessToken;
 
-			if (accessToken) {
+			if (accessToken && !token.error) {
 				const userDetails = (await fetchProfile(accessToken)) as Omit<UserDetails, "accessToken">;
 
-				if (token.role !== userDetails.role) await signOut();
+				if (token.role !== userDetails.role) await signOut({ redirect: true });
 
 				session.user = { ...userDetails, accessToken };
+
+				return Promise.resolve(session);
 			}
-			return session;
+
+			session.user = null;
+			session.error = token.error;
+
+			return Promise.resolve(session);
 		},
 		async jwt({ token, user }) {
 			if (user) {
@@ -119,17 +128,30 @@ export const authOptions = {
 				token.accessToken = user.tokens?.accessToken;
 				token.expiresIn = user.tokens?.expiresIn;
 				token.role = user.user?.role;
+				token.error = null;
 			}
 
-			if (Date.now() < Number(token?.expiresIn) - 2000) {
-				return token;
+			const isAuth = !!token?.refreshToken || !!token?.expiresIn || !!token?.email || !!token?.role;
+
+			if (!isAuth) {
+				return Promise.resolve(token);
 			}
 
-			return await refreshTokenApiCall(token);
+			const tokenExpires = Number(token.expiresIn) - 2000;
+
+			if (Date.now() < tokenExpires) {
+				return Promise.resolve(token);
+			}
+
+			const { accessToken, error, expiresIn, refreshToken } = await refreshTokenApiCall(token);
+			token = { ...token, refreshToken, accessToken, error, expiresIn };
+
+			return Promise.resolve(token);
 		}
 	},
 	session: {
-		strategy: "jwt"
+		strategy: "jwt",
+		maxAge: +process.env.NEXT_PUBLIC_JWT_EXPIRES
 	},
 	jwt: {
 		maxAge: +process.env.NEXT_PUBLIC_JWT_EXPIRES // Same as on the backend
@@ -137,7 +159,8 @@ export const authOptions = {
 	pages: {
 		signIn: "/signin",
 		signOut: "/signout"
-	}
+	},
+	debug: process.env.NODE_ENV === "development" ? true : false
 } satisfies NextAuthOptions;
 
 export default NextAuth(authOptions);
