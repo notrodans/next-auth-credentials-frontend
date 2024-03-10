@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Toaster } from "@/components/ui/toaster";
 import { Header } from "./_components/header";
 import { getServerSession } from "next-auth";
-import { authOptions } from "../../pages/api/auth/[...nextauth]";
+import { authOptions } from "./api/auth/[...nextauth]/route";
 
 const inter = Inter({ weight: ["300", "400", "500", "700"], subsets: ["latin", "cyrillic"] });
 
@@ -23,12 +23,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 	return (
 		<html lang='en' suppressHydrationWarning>
 			<body className={cn(inter.className, "font-medium")}>
-				<Providers
-					refetchOnWindowFocus={true}
-					refetchWhenOffline={false}
-					refetchInterval={Number(process.env.NEXT_PUBLIC_JWT_EXPIRES) / 2}
-					session={session}
-				>
+				<Providers refetchOnWindowFocus={true} refetchWhenOffline={false} session={session}>
 					<div className='wrapper flex min-h-screen flex-col overflow-hidden'>
 						<Header />
 						<main className='flex flex-auto flex-col pt-20'>{children}</main>

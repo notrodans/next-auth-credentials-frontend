@@ -1,18 +1,21 @@
+"use client";
+
 import { signOut, useSession } from "next-auth/react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export const useAuth = () => {
 	const { data, status, update } = useSession();
+	const [isFetched, setIsFetched] = useState(false);
 
 	useEffect(() => {
-		if (!data?.user && status === "authenticated") {
-			signOut({ redirect: true });
+		if (!isFetched && data?.error === "RetryApiCall") {
+			setIsFetched(true);
+			update();
 		}
-
-		if (data?.error === "RefreshAccessTokenError") {
-			signOut({ redirect: true });
+		if (data?.error === "Unauthorizhed") {
+			signOut({ redirect: false });
 		}
-	}, [data, status]);
+	}, [data, status, isFetched, update]);
 
 	return {
 		session: data,

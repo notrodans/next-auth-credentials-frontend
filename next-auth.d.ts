@@ -1,7 +1,8 @@
-import { DefaultSession, Role, Error } from "next-auth";
+import { DefaultSession, ErrorType, Role } from "next-auth";
+import { ProviderType } from "next-auth/providers/index";
 
 declare module "next-auth" {
-	type Error = "RefreshAccessTokenError" | null | undefined;
+	type ErrorType = "Unauthorizhed" | "RetryApiCall" | null | undefined;
 	type Role = "USER" | "ADMIN";
 	type Tokens = {
 		accessToken?: string | null;
@@ -19,8 +20,8 @@ declare module "next-auth" {
 	};
 
 	interface Session {
-		user: (UserDetails & DefaultSession["user"]) | null;
-		error?: Error;
+		user: (DefaultSession["user"] & UserDetails) | null;
+		error?: ErrorType;
 	}
 
 	interface User {
@@ -35,6 +36,7 @@ declare module "next-auth/jwt" {
 		refreshToken?: string | null;
 		expiresIn?: number | null;
 		role?: Role | null;
-		error?: Error;
+		error?: ErrorType;
+		providerType?: ProviderType;
 	}
 }

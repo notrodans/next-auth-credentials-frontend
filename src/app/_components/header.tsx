@@ -41,7 +41,7 @@ export const Header = () => {
 								href='/api/auth/signin'
 								className={cn(
 									"transition-colors hover:text-foreground/80",
-									pathname?.startsWith("/examples") ? "text-foreground" : "text-foreground/60"
+									pathname?.includes("/examples") ? "text-foreground" : "text-foreground/60"
 								)}
 							>
 								Sign in
@@ -50,7 +50,7 @@ export const Header = () => {
 								href={"/signup"}
 								className={cn(
 									"text-foreground/60 transition-colors hover:text-foreground/80",
-									pathname?.startsWith("/signup") ? "text-foreground" : "text-foreground/60"
+									pathname?.includes("/signup") ? "text-foreground" : "text-foreground/60"
 								)}
 							>
 								Sign up
@@ -64,7 +64,7 @@ export const Header = () => {
 									href={"/admin"}
 									className={cn(
 										"text-foreground/60 transition-colors hover:text-foreground/80",
-										pathname?.startsWith("/admin") ? "text-foreground" : "text-foreground/60"
+										pathname?.includes("/admin") ? "text-foreground" : "text-foreground/60"
 									)}
 								>
 									Admin
@@ -74,7 +74,7 @@ export const Header = () => {
 								href={"/profile"}
 								className={cn(
 									"text-foreground/60 transition-colors hover:text-foreground/80",
-									pathname?.startsWith("/profile") ? "text-foreground" : "text-foreground/60"
+									pathname?.includes("/profile") ? "text-foreground" : "text-foreground/60"
 								)}
 							>
 								Profile

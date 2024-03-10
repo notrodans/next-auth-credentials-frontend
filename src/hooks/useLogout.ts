@@ -25,7 +25,7 @@ export const useLogout = ({
 			return;
 		}
 		if (status === "authenticated") {
-			await signOut({ redirect: true, callbackUrl: "/" });
+			await signOut({ redirect: false });
 			toast({ title, description, ...props });
 		}
 		if (status === "unauthenticated") {

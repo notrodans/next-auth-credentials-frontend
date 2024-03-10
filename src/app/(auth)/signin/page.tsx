@@ -1,8 +1,7 @@
 "use client";
 
-import { signIn } from "next-auth/react";
-import { valibotResolver } from "@hookform/resolvers/valibot";
-import * as v from "valibot";
+import { FormContainer } from "@/components/common/container";
+import { Button } from "@/components/ui/button";
 import {
 	Form,
 	FormControl,
@@ -12,14 +11,16 @@ import {
 	FormLabel,
 	FormMessage
 } from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { redirect, useSearchParams, useRouter } from "next/navigation";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/hooks/useAuth";
+import { valibotResolver } from "@hookform/resolvers/valibot";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
-import { FormContainer } from "@/components/common/container";
+import { redirect, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo } from "react";
+import { useForm } from "react-hook-form";
+import * as v from "valibot";
 
 const formSchema = v.object({
 	email: v.string([v.email(), v.minLength(2, "Email must be at least 2 characters.")]),
@@ -27,16 +28,25 @@ const formSchema = v.object({
 });
 
 export default function Page() {
-	const { session, status } = useAuth();
+	const { session } = useAuth();
 
 	const searchParams = useSearchParams();
 
-	if (session && status === "authenticated") {
+	if (session) {
 		redirect("/");
 	}
 
+	const callbackUrl = useMemo(
+		() => searchParams?.get("callbackUrl")?.replace(process.env.NEXT_PUBLIC_URL!, "") || "",
+		[searchParams]
+	);
+
 	const { toast } = useToast();
 	const router = useRouter();
+
+	useEffect(() => {
+		router.prefetch(callbackUrl);
+	}, [router, callbackUrl]);
 
 	const form = useForm<v.Output<typeof formSchema>>({
 		resolver: valibotResolver(formSchema),
@@ -47,23 +57,21 @@ export default function Page() {
 	});
 
 	async function onSubmit(values: v.Output<typeof formSchema>) {
-		const callbackUrl =
-			searchParams?.get("callbackUrl")?.replace(process.env.NEXT_PUBLIC_URL!, "") || "";
-
-		await signIn("credentials", {
+		const res = await signIn("credentials", {
 			...values,
 			redirect: false,
 			callbackUrl
-		}).then(res => {
-			if (res?.error) {
-				toast({ title: "Error", description: res?.error });
-			} else {
-				setTimeout(() => {
-					router.push(callbackUrl);
-					toast({ title: "Success", description: "Successful authorization" });
-				}, 0);
-			}
 		});
+
+		if (!res?.error) {
+			toast({ title: "Success", description: "Successful authorization" });
+
+			setTimeout(() => {
+				router.replace(callbackUrl);
+			});
+		} else {
+			toast({ title: "Error", description: res?.error });
+		}
 	}
 
 	return (

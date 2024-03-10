@@ -74,10 +74,11 @@ export default function Page() {
 			});
 
 			setTimeout(() => {
-				router.push("/signin");
-			}, 1000);
+				router.replace("/signin");
+			});
 		} else {
 			const data = await res.json();
+
 			toast({
 				title: "Error",
 				description: data.message || "Bad request"
