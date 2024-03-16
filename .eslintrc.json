@@ -6,7 +6,17 @@
 		"plugin:react-hooks/recommended",
 		"plugin:prettier/recommended"
 	],
-	"plugins": ["@typescript-eslint", "prettier"],
+	"root": true,
+	"ignorePatterns": [
+		"node_modules/",
+		"**/node_modules/",
+		" /**/node_modules/*",
+		".next/"
+	],
+	"plugins": [
+		"@typescript-eslint",
+		"prettier"
+	],
 	"rules": {
 		"prettier/prettier": [
 			"warn",
@@ -20,7 +30,9 @@
 				"arrowParens": "avoid",
 				"printWidth": 100,
 				"endOfLine": "auto",
-				"plugins": ["prettier-plugin-tailwindcss"]
+				"plugins": [
+					"prettier-plugin-tailwindcss"
+				]
 			}
 		],
 		"@typescript-eslint/no-empty-interface": [
