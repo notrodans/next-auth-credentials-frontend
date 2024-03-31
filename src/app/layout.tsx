@@ -29,6 +29,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 						<main className='flex flex-auto flex-col pt-20'>{children}</main>
 					</div>
 				</Providers>
+				<Providers>
+					<Header />
+					<main className='flex flex-auto flex-col pt-20'>{children}</main>
+				</Providers>
 				<Toaster />
 			</body>
 		</html>

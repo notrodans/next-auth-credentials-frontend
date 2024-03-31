@@ -1,6 +1,6 @@
-import { NextResponse, NextMiddleware, NextRequest } from "next/server";
+import { ErrorType, Tokens } from "next-auth";
 import { JWT, encode, getToken } from "next-auth/jwt";
-import { Tokens, ErrorType } from "next-auth";
+import { NextMiddleware, NextRequest, NextResponse } from "next/server";
 
 export type TokensAndError = Tokens & { error: ErrorType };
 
@@ -25,9 +25,13 @@ export const middleware: NextMiddleware = async request => {
 
 	if (shouldUpdateToken(token) || token.error === "RetryApiCall") {
 		try {
+			const newToken = { ...(await refreshTokens(token)) };
+			if (newToken.error === "Unauthorizhed") {
+				return updateCookie(null, request, response);
+			}
 			const newSessionToken = await encode({
 				secret: process.env.NEXTAUTH_SECRET,
-				token: { ...(await refreshTokens(token)), error: null },
+				token: newToken,
 				maxAge: REFRESH_EXPIRES
 			});
 			response = updateCookie(newSessionToken, request, response);
@@ -45,7 +49,7 @@ export const config = {
 };
 
 export function shouldUpdateToken(token: JWT): boolean {
-	return Date.now() < Number(token?.expiresIn) ? false : true;
+	return Date.now() < Number(token?.expiresIn) - 5000 ? false : true;
 }
 
 export async function refreshTokens(token: JWT): Promise<JWT> {
@@ -92,13 +96,15 @@ export async function refreshTokens(token: JWT): Promise<JWT> {
 			};
 		}
 
-		return {
-			...token,
-			accessToken: null,
-			refreshToken: null,
-			expiresIn: 0,
-			error: null
-		};
+		if (res.status === 401) {
+			return {
+				...token,
+				accessToken: null,
+				refreshToken: null,
+				expiresIn: 0,
+				error: "Unauthorizhed"
+			};
+		}
 	} catch (e) {
 		console.error(e);
 	} finally {

@@ -22,7 +22,7 @@ export default function Page() {
 						</Button>
 						<span className='self-center text-sm font-light text-gray-400'>or</span>
 						<Button asChild>
-							<Link href='/signup'>Sign up</Link>
+							<Link href='/signup'></Link>
 						</Button>
 					</FormContainer>
 				)}

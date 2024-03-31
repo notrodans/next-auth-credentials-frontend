@@ -8,13 +8,15 @@ export const useAuth = () => {
 	const [isFetched, setIsFetched] = useState(false);
 
 	useEffect(() => {
-		if (!isFetched && data?.error === "RetryApiCall") {
-			setIsFetched(true);
-			update();
-		}
-		if (data?.error === "Unauthorizhed") {
-			signOut({ redirect: false });
-		}
+		(async () => {
+			if (!isFetched && data?.error === "RetryApiCall") {
+				setIsFetched(true);
+				await update();
+			}
+			if (data?.error === "Unauthorizhed") {
+				await signOut({ redirect: false });
+			}
+		})();
 	}, [data, status, isFetched, update]);
 
 	return {

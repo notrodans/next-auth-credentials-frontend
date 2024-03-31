@@ -1,7 +1,5 @@
-import NextAuth, { NextAuthOptions, Session, UserDetails } from "next-auth";
+import NextAuth, { NextAuthOptions, UserDetails } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-
-let previousSession: Session | null;
 
 export const authOptions = {
 	providers: [
@@ -56,7 +54,6 @@ export const authOptions = {
 
 				if (!userDetails) {
 					session.error = "RetryApiCall";
-					session.user = previousSession?.user ?? null;
 					return Promise.resolve(session);
 				}
 
@@ -66,7 +63,6 @@ export const authOptions = {
 				}
 
 				session.user = { ...userDetails, accessToken };
-				previousSession = { ...session };
 			}
 
 			if (token?.error) {
@@ -122,24 +118,24 @@ export const authOptions = {
 const fetchProfile = async (
 	accessToken: string
 ): Promise<Omit<UserDetails, "accessToken"> | null> => {
-	const url = process.env.NEXT_PUBLIC_API_URL + "/user/profile";
-
-	const userRes = await fetch(url, {
-		method: "POST",
-		headers: {
-			Authorization: `Bearer ${accessToken}`,
-			Accept: "application/json"
-		},
-		credentials: "include",
-		cache: "no-cache"
-	});
-
-	const userDetails = await userRes.json();
-
-	if (userRes.ok) {
-		return userDetails;
+	try {
+		const url = process.env.NEXT_PUBLIC_API_URL + "/user/profile"
+		const userRes = await fetch(url, {
+			method: "POST",
+			headers: {
+				Authorization: `Bearer ${accessToken}`,
+				Accept: "application/json"
+			},
+			credentials: "include",
+			cache: "no-cache"
+		});
+		const userDetails = await userRes.json();
+		if (userRes.ok) {
+			return userDetails;
+		}
+	} catch (e) {
+		console.log(e);
 	}
-
 	return null;
 };
 
